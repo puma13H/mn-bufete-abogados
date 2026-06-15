@@ -1,39 +1,168 @@
-# MINI BUFETE DE ABOGADOS
+# ⚖️ MINI BUFETE DE ABOGADOS
 
-Sistema de gestión jurídica para la administración de clientes, abogados, casos, audiencias y documentos legales.
+Sistema de gestión jurídica diseñado para optimizar la administración de clientes, abogados, casos legales, audiencias, documentos jurídicos y procesos internos de un bufete de abogados.
 
-## Tecnologías
+---
 
-- Java
-- Maven
-- PlantUML
-- Arquitectura C4
+## 📋 Descripción
 
-## Estructura del Proyecto
+El sistema permite gestionar de manera eficiente la información jurídica y administrativa del bufete, facilitando el seguimiento de casos, la organización de documentos legales, el control de audiencias y la comunicación entre abogados, clientes y administradores.
+
+---
+
+## 🛠️ Tecnologías Utilizadas
+
+* Java
+* Maven
+* PlantUML
+* Arquitectura C4
+* UML
+* Git & GitHub
+
+---
+
+## 🏗️ Arquitectura y Modelado
+
+### Modelo C4
+
+* Diagrama de Contexto
+* Diagrama de Contenedores
+* Diagrama de Componentes
+
+### UML
+
+* Casos de Uso
+* Diagramas de Clases
+* Diagramas de Secuencia
+* Diagramas de Actividad
+
+---
+
+## 📂 Estructura del Proyecto
 
 ```text
-CONTEXTO/
-DOCUMENTACION/
-MODELO_C4/
-MODELO_UML/
-    ABOGADO/
-    CLIENTE/
-    ADMINISTRADOR/
-    //www.plantuml.com/plantuml/png/fPLFQnDF6CVlyohc5_XXUuYjnOEKTEcIR4ebRKesgHG2CfbzkfrsCXDcPaFL29u4Ro95mOkU0nx4W-3HlfE-0b-2C_jdNLDxIPQ5p3xFvzbz_dndigiDKIOPSyJXr60ZiMBncS4HKq0DamBzPyvW37Z44uWLUOQGlc1YGXGPurCf3QYs5AOfkLIM8VG26MOuu8Pcps5xQzDhZBmcqH97W1FxKsiEDhTm7NTa34Hfg3KsHbvZmz4UGlVmpZANZVER_Mul29T-0oBKI8LhVZHcWccZI2HL3HEDYRCKxYY1wwyojTkba8Nz64G4aLsjKH0scA-dp9JU1iA49agNX5wbwd0_x0S7_l9LkoaJ4NF0jV0an4UzRjllrLuWXEsLQA14MzVDXpT3aKtqmICtKJV4ok26eXodgsdGV6gVcLXuowzFLs-7ufXm5X4r55H1188oma4NORdpLk1yFXHx842vmBwy084VF-aNKNQvcF37pqDn8DqObLs0qEGSd0H1AQcAkFG1lLnb0BsWupVtkuShASy93DVhNjaul8rzIY42b8hi3j-KtkNGTpXGQRhlLTfjWKQ32SgJ23nl0NBTNG1GqJj7bBHZuDA0YBoLTd8dE0aEMtwgnI2qlVKxo_UMGmmYoWurDDl1LhkvZXzwnOVsWiEWvtToBJjPOqlEKCw7rr_68ybbxd2c5cYgs8IowsyYCriOsrs2PxXws4qK4vHD2BV033lzMo1hUXhhkEesoB7vt6APt4lC5A9F6QjlYxHvSYunuGQK88PDPQdmFzdtW9DAdbb5B1Rib54IoKhsLw_-kj__i5_mjQGiJo8xo6vUlyEqKgBBvkVt_Cw2MZ01aTM41mSTXrJbKoOkHvp5n4Z5PCuKylbNRHjmIS6sN8gqdSY2sN1NqLgxs-q7lUNbbVq38jVJylHqBKKjHc95naId7QYdgj2kPmCjqH4dmZZx_rDGcacnjkxAoL-sQvV9cFy6
-    
-src/
+mn-bufete-abogados/
+│
+├── CONTEXTO/
+│   ├── ContextoGeneral.md
+│   └── Actores.md
+│
+├── DOCUMENTACION/
+│   ├── RequisitosFuncionales.md
+│   ├── RequisitosNoFuncionales.md
+│   └── Glosario.md
+│
+├── MODELO_C4/
+│   ├── Contexto/
+│   ├── Contenedores/
+│   └── Componentes/
+│
+├── MODELO_UML/
+│   ├── ADMINISTRADOR/
+│   ├── ABOGADO/
+│   ├── CLIENTE/
+│   └── GENERAL/
+│
+├── src/
+│
+├── pom.xml
+│
+└── README.md
 ```
 
-## Documentación
+---
 
-- Contexto del Sistema
-- Requisitos Funcionales
-- Requisitos No Funcionales
-- Casos de Uso
-- Diagramas UML
-- Modelo C4
+# 👥 Actores del Sistema
 
-## Equipo
+## Administrador
 
-- CristhLaw
-```
+* Gestionar usuarios.
+* Gestionar abogados.
+* Gestionar clientes.
+* Gestionar roles y permisos.
+* Supervisar el funcionamiento general del sistema.
+
+## Abogado
+
+* Gestionar casos legales.
+* Registrar audiencias.
+* Administrar documentos jurídicos.
+* Realizar seguimiento de expedientes.
+
+## Cliente
+
+* Consultar información de sus casos.
+* Revisar documentos autorizados.
+* Consultar audiencias programadas.
+
+---
+
+# 📌 Casos de Uso
+
+## Gestionar Usuarios
+
+![Gestionar Usuarios](COLOCA_AQUI_TU_URL_DE_PLANTUML)
+
+---
+
+## Gestionar Clientes
+
+![Gestionar Clientes](COLOCA_AQUI_TU_URL_DE_PLANTUML)
+
+---
+
+## Gestionar Abogados
+
+![Gestionar Abogados](COLOCA_AQUI_TU_URL_DE_PLANTUML)
+
+---
+
+## Gestionar Casos
+
+![Gestionar Casos](COLOCA_AQUI_TU_URL_DE_PLANTUML)
+
+---
+
+## Gestionar Audiencias
+
+![Gestionar Audiencias](COLOCA_AQUI_TU_URL_DE_PLANTUML)
+
+---
+
+# 📊 Diagrama de Clases
+
+![Diagrama de Clases](COLOCA_AQUI_TU_URL_DEL_DIAGRAMA_DE_CLASES)
+
+---
+
+# 🎯 Objetivos del Sistema
+
+* Centralizar la información jurídica.
+* Optimizar la gestión de expedientes.
+* Reducir errores administrativos.
+* Mejorar el seguimiento de casos.
+* Facilitar la comunicación entre abogados y clientes.
+* Garantizar la seguridad y confidencialidad de la información.
+
+---
+
+# 🚀 Estado del Proyecto
+
+📌 Fase actual: Análisis y Diseño
+
+* [x] Contexto del sistema
+* [x] Identificación de actores
+* [x] Casos de uso
+* [x] Modelo C4
+* [ ] Diseño de base de datos
+* [ ] Implementación backend
+* [ ] Implementación frontend
+* [ ] Pruebas del sistema
+
+---
+
+# 👨‍💻 Equipo de Desarrollo
+
+**CristhLaw**
+
+Proyecto académico de Ingeniería de Software.
