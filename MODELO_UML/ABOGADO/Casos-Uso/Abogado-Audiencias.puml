@@ -1,0 +1,109 @@
+@startuml IURIS_CasosUso_GestionAudiencias
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam usecase {
+  BackgroundColor #F8F9FA
+  BorderColor #495057
+  ArrowColor #495057
+  FontColor #212529
+}
+skinparam actor {
+  BorderColor #495057
+  FontColor #212529
+}
+
+actor "Cliente" as Cliente
+actor "Abogado Principal" as Abogado
+actor "Administrador" as Admin
+actor "Sistema de\nNotificaciones" as SistemaNotif <<system>>
+
+rectangle "Gestión de Citas y Audiencias" {
+
+  usecase "Agendar Cita" as UC0
+  usecase "Confirmar Cita" as UC0a
+  usecase "Agendar Audiencia" as UC1
+  usecase "Reprogramar Audiencia" as UC2
+  usecase "Cancelar Audiencia" as UC3
+  usecase "Ver Audiencias Programadas" as UC4
+  usecase "Iniciar Audiencia" as UC5
+  usecase "Suspender Audiencia" as UC6
+  usecase "Concluir Audiencia" as UC7
+  usecase "Generar Acta" as UC8
+  usecase "Consultar Detalle de Audiencia" as UC9
+
+  usecase "Verificar Disponibilidad de Sede" as UCinc1
+  usecase "Asociar Audiencia a Caso" as UCinc2
+  usecase "Enviar Notificación" as UCinc3
+  usecase "Registrar Resultado" as UCext1
+
+  usecase "Generar Reporte de Audiencias" as UCadmin
+}
+
+' ===================== Actor - Caso de uso =====================
+Cliente --> UC0
+Cliente --> UC4
+Cliente --> UC9
+
+Abogado --> UC0a
+Abogado --> UC1
+Abogado --> UC2
+Abogado --> UC3
+Abogado --> UC4
+Abogado --> UC5
+Abogado --> UC6
+Abogado --> UC7
+Abogado --> UC9
+
+Admin --> UCadmin
+
+' ===================== Relaciones include =====================
+UC1 ..> UCinc1 : <<include>>
+UC1 ..> UCinc2 : <<include>>
+UC2 ..> UCinc3 : <<include>>
+UC3 ..> UCinc3 : <<include>>
+UC7 ..> UCinc3 : <<include>>
+
+' ===================== Relaciones extend =====================
+UCext1 .up.> UC7 : <<extend>>
+UC8 .up.> UC7 : <<extend>>
+
+' ===================== Notificaciones =====================
+UCinc3 --> SistemaNotif
+
+' ===================== Notas de coherencia con el modelo de clases =====================
+note right of UC0
+  Corresponde a Cliente.agendarCita()
+  Cita.estado inicial = PROGRAMADA
+end note
+
+note right of UC1
+  Precondición: la Cita asociada
+  debe estar en estado CONFIRMADA
+  (ver Cita.confirmar())
+  Crea una Audiencia (Cita "1"-->"0..1" Audiencia)
+end note
+
+note right of UC5
+  Solo puede iniciarse si
+  Audiencia.estado = PROGRAMADA
+  (método Audiencia.iniciar())
+end note
+
+note right of UC6
+  Corresponde a Audiencia.suspender(motivo)
+  Estado resultante: SUSPENDIDA
+end note
+
+note right of UC7
+  Corresponde a Audiencia.concluir(resultado)
+  Estado resultante: CONCLUIDA
+end note
+
+note bottom of UCinc2
+  Toda Audiencia queda asociada
+  a un Caso (Caso "1"-->"0..*" Audiencia)
+  y a una Sede (Sede "1"-->"0..*" Audiencia)
+end note
+
+@enduml

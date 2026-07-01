@@ -1,0 +1,67 @@
+@startuml
+
+skinparam footerFontColor black
+
+title <size:20><b>Diagrama de Estados — Caso Legal</b></size>\n<size:12>EstadoCasoMachine (MS Casos Legales) — RN-09</size>
+
+[*] --> Activo : Abogado abre expediente\n(CU-AB-04 Crear Expediente)
+
+state Activo <<inicial>> {
+  Activo : entry / AsignacionAbogadoService valida\n  especialidad y carga (máx. 20 casos, RN-11)
+  Activo : entry / NotificacionCasoPublisher.emitir("CasoActualizado")
+}
+
+Activo --> EnAudiencia : Abogado programa audiencia\n(CU-AB-09 Gestionar Audiencias)
+EnAudiencia --> EnEspera : Audiencia concluye,\nse espera resolución / documentación
+EnEspera --> EnAudiencia : Se programa nueva audiencia
+EnEspera --> Activo : Se reanuda gestión del expediente
+Activo --> EnEspera : Caso queda a la espera\nde una actuación externa
+
+state EnAudiencia {
+  EnAudiencia : do / Registrar actuación procesal\n  (CU-AB-06, fecha + tipo + responsable)
+}
+
+state EnEspera {
+  EnEspera : do / Consulta de estado habilitada\n  para Cliente (solo lectura, CU-12)
+}
+
+EnAudiencia --> Cerrado : Abogado registra resolución\ny cierra el caso (CU-AB-11 / CU-AB-12)
+EnEspera --> Cerrado : Abogado registra resolución\ny cierra el caso (CU-AB-11 / CU-AB-12)
+
+state Cerrado <<final>> {
+  Cerrado : entry / NotificacionCasoPublisher.emitir("CasoCerrado")
+  Cerrado : entry / Cliente notificado (MS Comunicación)
+}
+
+Cerrado --> Archivado : Vencido el periodo de\nretención administrativa
+Archivado : Solo lectura — expediente\nconservado para auditoría legal
+
+state Archivado <<final>>
+Archivado --> [*]
+
+note right of Activo
+  Cualquier transición de estado
+  dispara el evento "CasoActualizado"
+  (RN-14) → MS Comunicación notifica
+  automáticamente al Cliente.
+end note
+
+note bottom of Cerrado
+  El cierre exige una resolución
+  registrada previamente (RN-12).
+end note
+
+legend right
+|= <b>Regla de negocio</b> |= <b>Descripción</b> |
+| RN-09 | Ciclo de vida válido: Activo → En Audiencia → En Espera → Cerrado → Archivado |
+| RN-11 | Máx. 20 casos activos por abogado |
+| RN-12 | Toda actuación procesal exige fecha, tipo y responsable |
+| RN-14 | Todo cambio relevante emite evento "CasoActualizado" |
+endlegend
+
+footer
+<b>IURIS / MN Bufete de Abogados — LexTech Solutions S.A.C.</b>
+Diagrama de Estados - Caso Legal
+PlantUML %version()
+endfooter
+@enduml

@@ -1,0 +1,66 @@
+@startuml
+
+title Diagrama de Secuencia — Cliente\nCU-06 Agendar Cita
+
+autonumber
+
+actor "Cliente" as Cliente
+participant "App Web / Móvil" as App
+participant "API Gateway" as GW
+participant "AgendaController" as Ctrl
+participant "AgendaService" as Svc
+participant "DisponibilidadValidator" as Valid
+participant "AgendaRepository" as Repo
+database "DB Agenda" as DB
+participant "NotificacionAgendaPublisher" as Pub
+participant "MS Comunicación" as Comm
+
+Cliente -> App : Selecciona abogado,\nfecha y hora deseada
+App -> GW : POST /appointments\n(token JWT)
+GW -> GW : Valida token JWT (RN-01, RN-03)
+GW -> Ctrl : POST /appointments
+
+Ctrl -> Svc : crearCita(datos)
+Svc -> Svc : Validar antelación >= 24h (RN-15)
+
+alt antelación insuficiente
+    Svc --> Ctrl : Error 400 -\nantelación mínima no cumplida
+    Ctrl --> GW : 400 Bad Request
+    GW --> App : 400 Bad Request
+    App --> Cliente : Muestra mensaje de error
+else antelación válida
+    Svc -> Valid : validarDisponibilidad(abogado, fecha)
+    Valid -> Repo : consultarAgendaAbogado(abogado, fecha)
+    Repo -> DB : SELECT citas WHERE abogado = ? AND fecha = ?
+    DB --> Repo : resultado
+
+    alt horario ocupado (RN-16)
+        Valid --> Svc : conflicto de horario
+        Svc -> Repo : consultarHorariosAlternativos(abogado, fecha)
+        Repo -> DB : SELECT horarios disponibles
+        DB --> Repo : horarios libres
+        Repo --> Svc : lista de horarios sugeridos
+        Svc --> Ctrl : 409 Conflict + sugerencias
+        Ctrl --> GW : 409 Conflict
+        GW --> App : 409 Conflict + horarios alternativos
+        App --> Cliente : Muestra horarios alternativos
+    else disponible
+        Valid --> Svc : disponibilidad confirmada
+        Svc -> Repo : guardarCita(cita)
+        Repo -> DB : INSERT INTO citas (...)
+        DB --> Repo : cita persistida
+        Repo --> Svc : cita creada
+
+        Svc -> Pub : publicarEventoCitaCreada(cita)
+        Pub -> Comm : evento CitaCreada
+        Comm -> Comm : Programar recordatorios\n48h y 24h (RN-17)
+        Comm --> Pub : ack
+
+        Svc --> Ctrl : cita confirmada
+        Ctrl --> GW : 201 Created
+        GW --> App : 201 Created
+        App --> Cliente : Confirma la cita agendada
+    end
+end
+
+@enduml

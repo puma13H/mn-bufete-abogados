@@ -1,0 +1,58 @@
+@startuml
+
+skinparam footerFontColor black
+
+title <size:20><b>Diagrama de Estados — Cita / Audiencia</b></size>\n<size:12>AgendaService · DisponibilidadValidator (MS Agenda y Audiencias)</size>
+
+[*] --> Solicitada : Cliente agenda cita (CU-06)\nAbogado/Secretaria programa audiencia (CU-AB-09)
+
+state Solicitada {
+  Solicitada : entry / DisponibilidadValidator verifica\n  choque de horario del abogado (RN-16)
+  Solicitada : entry / AgendaService valida\n  anticipación mínima de 24h (RN-15)
+}
+
+Solicitada --> [*] : Validación falla\n(< 24h o abogado no disponible)
+
+Solicitada --> Confirmada : Validación exitosa\ncita/audiencia registrada
+
+state Confirmada {
+  Confirmada : do / RecordatorioScheduler programa\n  recordatorios automáticos (RN-17)
+}
+
+Confirmada --> RecordatorioEnviado_48h : 48h antes del evento
+RecordatorioEnviado_48h --> RecordatorioEnviado_24h : 24h antes del evento
+RecordatorioEnviado_24h --> Realizada : Se lleva a cabo\nla cita/audiencia
+
+Confirmada --> Reprogramada : Cliente/Abogado reprograma\n(CU-07 Reprogramar Cita)
+Reprogramada --> Confirmada : Nueva fecha validada\n(≥ 24h, sin choque de horario)
+
+Confirmada --> Cancelada : Cliente/Secretaria cancela\n(CU-08 Cancelar Cita)
+RecordatorioEnviado_48h --> Cancelada : Cancelación antes del evento
+
+state Realizada <<end>>
+state Cancelada <<end>>
+
+Realizada --> [*]
+Cancelada --> [*]
+
+note right of Confirmada
+  Cada cambio de estado publica un
+  evento mediante NotificacionAgendaPublisher
+  → MS Comunicación notifica a
+  Cliente y Abogado (RN-23).
+end note
+
+legend right
+|= <b>Regla de negocio</b> |= <b>Descripción</b> |
+| RN-15 | Anticipación mínima de 24h para agendar |
+| RN-16 | Sin choques de horario para el abogado convocado |
+| RN-17 | Recordatorios automáticos a 48h y 24h |
+| RN-23 | MS Comunicación consume eventos de agenda |
+endlegend
+
+footer
+<b>IURIS / MN Bufete de Abogados — LexTech Solutions S.A.C.</b>
+Diagrama de Estados - Cita / Audiencia
+PlantUML %version()
+endfooter
+@enduml

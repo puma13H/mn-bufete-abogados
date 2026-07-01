@@ -1,0 +1,48 @@
+@startuml
+
+title Diagrama de Secuencia — Abogado Asistente\nCU-AA-03 Ver Casos de Apoyo + CU-AA-06 Consultar Agenda de Audiencias
+
+autonumber
+
+actor "Abogado Asistente" as Asist
+participant "App Web" as App
+participant "API Gateway" as GW
+participant "CasoController" as CCtrl
+participant "CasoService" as CSvc
+participant "CasoRepository" as CRepo
+database "DB Casos" as CDB
+participant "AgendaController" as ACtrl
+participant "AgendaService" as ASvc
+participant "AgendaRepository" as ARepo
+database "DB Agenda" as ADB
+
+Asist -> App : Abre panel\n"Mis casos de apoyo"
+App -> GW : GET /cases?asistente={id}
+GW -> GW : Valida token JWT y rol
+GW -> CCtrl : GET /cases?asistente={id}
+
+CCtrl -> CSvc : listarCasosDeApoyo(asistenteId)
+CSvc -> CRepo : buscarPorAsistente(asistenteId)
+CRepo -> CDB : SELECT casos WHERE asistente = ?
+CDB --> CRepo : lista de casos
+CRepo --> CSvc : casos encontrados
+CSvc --> CCtrl : lista de casos
+CCtrl --> GW : 200 OK
+GW --> App : 200 OK
+App --> Asist : Muestra casos donde\napoya (con permisos otorgados)
+
+Asist -> App : Consulta agenda de\naudiencias del abogado principal
+App -> GW : GET /appointments?abogado={id}
+GW -> ACtrl : GET /appointments?abogado={id}
+
+ACtrl -> ASvc : consultarAgenda(abogadoId)
+ASvc -> ARepo : buscarPorAbogado(abogadoId)
+ARepo -> ADB : SELECT audiencias WHERE abogado = ?
+ADB --> ARepo : audiencias programadas
+ARepo --> ASvc : lista de audiencias
+ASvc --> ACtrl : agenda consolidada
+ACtrl --> GW : 200 OK
+GW --> App : 200 OK
+App --> Asist : Muestra agenda de audiencias\npara coordinar tareas de apoyo
+
+@enduml

@@ -1,0 +1,83 @@
+@startuml
+
+title Diagrama de Secuencia — Cliente\nCU-01 Registrarse + CU-02 Iniciar Sesión
+
+autonumber
+
+actor "Cliente" as Cliente
+participant "App Web / Móvil" as App
+participant "API Gateway" as GW
+participant "UsuarioController" as UCtrl
+participant "UsuarioService" as USvc
+participant "SedeValidator" as Sede
+participant "UsuarioRepository" as URepo
+database "DB Usuarios" as UDB
+participant "AuthController" as ACtrl
+participant "AuthService" as ASvc
+participant "PasswordEncoder" as Pwd
+participant "JWTProvider" as JWT
+database "DB Auth" as ADB
+
+== Registro (CU-01) ==
+
+Cliente -> App : Ingresa nombres, correo,\ncontraseña y datos de contacto
+App -> GW : POST /users (rol=Cliente)
+GW -> UCtrl : POST /users
+
+UCtrl -> USvc : registrarCliente(datos)
+USvc -> URepo : existePorCorreo(correo)
+URepo -> UDB : SELECT WHERE correo = ?
+UDB --> URepo : resultado
+
+alt correo ya registrado (RN-06)
+    URepo --> USvc : correo duplicado
+    USvc --> UCtrl : Error 409 Conflict
+    UCtrl --> GW : 409 Conflict
+    GW --> App : 409 Conflict
+    App --> Cliente : "El correo ya está registrado"
+else correo disponible
+    USvc -> Sede : validarSede(sedeId)
+    Sede --> USvc : sede activa (RN-07)
+    USvc -> URepo : guardarUsuario(rol="Cliente")
+    URepo -> UDB : INSERT INTO usuarios (...)
+    UDB --> URepo : usuario creado
+    USvc -> ASvc : registrarCredenciales(correo, password)
+    ASvc -> Pwd : encode(password)
+    Pwd --> ASvc : hash BCrypt (RN-02)
+    ASvc -> ADB : INSERT INTO credenciales (hash)
+    ADB --> ASvc : credencial almacenada
+    ASvc --> USvc : credenciales registradas
+    USvc --> UCtrl : usuario registrado
+    UCtrl --> GW : 201 Created
+    GW --> App : 201 Created
+    App --> Cliente : Registro exitoso
+end
+
+== Inicio de sesión (CU-02) ==
+
+Cliente -> App : Ingresa correo y contraseña
+App -> GW : POST /auth/login
+GW -> ACtrl : POST /auth/login
+
+ACtrl -> ASvc : autenticar(correo, password)
+ASvc -> ADB : SELECT hash WHERE correo = ?
+ADB --> ASvc : hash almacenado
+ASvc -> Pwd : matches(password, hash)
+
+alt credenciales inválidas
+    Pwd --> ASvc : no coincide
+    ASvc --> ACtrl : Error 401
+    ACtrl --> GW : 401 Unauthorized
+    GW --> App : 401 Unauthorized
+    App --> Cliente : "Credenciales incorrectas"
+else credenciales válidas
+    Pwd --> ASvc : coincide
+    ASvc -> JWT : generarToken(usuario, rol)
+    JWT --> ASvc : token JWT firmado (RS256)
+    ASvc --> ACtrl : token generado
+    ACtrl --> GW : 200 OK + token
+    GW --> App : 200 OK + token
+    App --> Cliente : Acceso concedido al sistema
+end
+
+@enduml

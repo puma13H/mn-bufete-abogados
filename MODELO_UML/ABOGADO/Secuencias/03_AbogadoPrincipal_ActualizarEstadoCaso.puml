@@ -1,0 +1,65 @@
+@startuml
+
+title Diagrama de Secuencia — Abogado Principal\nCU-AB-06 Registrar Actuación Procesal + CU-AB-05 Actualizar Estado de Caso
+
+autonumber
+
+actor "Abogado Principal" as Abg
+participant "App Web" as App
+participant "API Gateway" as GW
+participant "CasoController" as Ctrl
+participant "CasoService" as Svc
+participant "ActuacionProcesalService" as Act
+participant "EstadoCasoMachine" as Machine
+participant "CasoRepository" as Repo
+database "DB Casos" as DB
+participant "NotificacionCasoPublisher" as Pub
+participant "MS Comunicación" as Comm
+
+Abg -> App : Selecciona caso y registra\nactuación procesal (fecha, tipo)
+App -> GW : POST /cases/{id}/actuaciones
+GW -> GW : Valida token JWT y rol
+GW -> Ctrl : POST /cases/{id}/actuaciones
+
+Ctrl -> Act : registrarActuacion(caso, fecha, tipo, responsable)
+Act -> Act : Validar datos obligatorios (RN-12)
+Act -> Repo : guardarActuacion(actuacion)
+Repo -> DB : INSERT INTO actuaciones (...)
+DB --> Repo : actuación persistida
+Repo --> Act : ok
+Act --> Ctrl : actuación registrada
+Ctrl --> App : 201 Created
+App --> Abg : Confirma registro de actuación
+
+Abg -> App : Solicita cambiar estado del caso\n(ej. Activo -> En Audiencia)
+App -> GW : PATCH /cases/{id}/estado
+GW -> Ctrl : PATCH /cases/{id}/estado
+
+Ctrl -> Svc : actualizarEstado(caso, nuevoEstado)
+Svc -> Machine : transicionar(estadoActual, nuevoEstado)
+
+alt transición no permitida (RN-09)
+    Machine --> Svc : Error - transición inválida
+    Svc --> Ctrl : 400 Bad Request
+    Ctrl --> GW : 400 Bad Request
+    GW --> App : 400 Bad Request
+    App --> Abg : "Transición de estado no permitida"
+else transición válida
+    Machine --> Svc : nuevo estado aceptado
+    Svc -> Repo : actualizarEstadoCaso(caso, nuevoEstado)
+    Repo -> DB : UPDATE casos SET estado = ?
+    DB --> Repo : actualizado
+    Repo --> Svc : ok
+
+    Svc -> Pub : publicarEvento("CasoActualizado")
+    Pub -> Comm : evento CasoActualizado
+    Comm -> Comm : Generar notificación\npara el cliente (RN-14)
+    Comm --> Pub : ack
+
+    Svc --> Ctrl : estado actualizado
+    Ctrl --> GW : 200 OK
+    GW --> App : 200 OK
+    App --> Abg : Estado del caso actualizado
+end
+
+@enduml

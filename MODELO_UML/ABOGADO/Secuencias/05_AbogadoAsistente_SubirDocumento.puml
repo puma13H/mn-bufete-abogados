@@ -1,0 +1,64 @@
+@startuml
+
+title Diagrama de Secuencia — Abogado Asistente\nCU-AA-05 Subir Documentos Legales de Apoyo
+
+autonumber
+
+actor "Abogado Asistente" as Asist
+participant "App Web" as App
+participant "API Gateway" as GW
+participant "DocumentoController" as Ctrl
+participant "DocumentoService" as Svc
+participant "ArchivoValidator" as Valid
+participant "CloudinaryAdapter" as Cloud
+participant "Cloudinary" as CloudExt
+participant "DocumentoRepository" as Repo
+database "DB Documentos" as DB
+participant "AuditoriaAccesoService" as Audit
+
+Asist -> App : Selecciona archivo\ny caso vinculado
+App -> GW : POST /documents\n(multipart, token JWT)
+GW -> GW : Valida token JWT y\npermisos del rol Asistente
+GW -> Ctrl : POST /documents
+
+Ctrl -> Svc : subirDocumento(archivo, caso)
+Svc -> Valid : validarFormatoYTamano(archivo)
+
+alt formato o tamaño inválido (RN-18)
+    Valid --> Svc : archivo rechazado
+    Svc --> Ctrl : 400 Bad Request
+    Ctrl --> GW : 400 Bad Request
+    GW --> App : 400 Bad Request
+    App --> Asist : "Formato no permitido\no tamaño excedido"
+else archivo válido
+    Valid --> Svc : archivo aceptado
+    Svc -> Cloud : almacenar(archivo)
+    Cloud -> CloudExt : upload(archivo)
+    CloudExt --> Cloud : URL del recurso
+
+    alt error en almacenamiento externo
+        Cloud --> Svc : Error de carga
+        Svc --> Ctrl : 502 Bad Gateway
+        Ctrl --> GW : 502 Bad Gateway
+        GW --> App : 502 Bad Gateway
+        App --> Asist : "Error al subir el archivo,\nintente nuevamente"
+    else almacenamiento exitoso
+        Cloud --> Svc : URL confirmada (RN-19)
+        Svc -> Repo : guardarMetadatos(nombre, tipo, URL, caso, estado)
+        Repo -> DB : INSERT INTO documentos (...)
+        DB --> Repo : metadatos persistidos
+        Repo --> Svc : ok
+
+        Svc -> Audit : registrarAcceso(usuario, "CARGA", resultado="OK")
+        Audit -> DB : INSERT INTO log_auditoria (...)
+        DB --> Audit : registrado (RN-20)
+        Audit --> Svc : ok
+
+        Svc --> Ctrl : documento disponible
+        Ctrl --> GW : 201 Created
+        GW --> App : 201 Created
+        App --> Asist : Documento cargado\nal expediente del caso
+    end
+end
+
+@enduml
