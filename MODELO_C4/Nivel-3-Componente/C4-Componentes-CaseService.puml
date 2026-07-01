@@ -1,28 +1,29 @@
 @startuml
-title C4 Nivel 3 - Componentes de CaseService
+title C4 Nivel 3 - Componentes de MS Casos Legales
 
 actor "API Gateway" as APIGW
-actor "Base de datos de casos" as DBCase
-actor "Bus de eventos" as EventBus
+database "DB Casos\nPostgreSQL" as DBCasos
+queue "Bus de Eventos" as EventBus
 
-package "CaseService" {
-  [CaseController] as Controller
-  [CaseService] as Service
-  [CaseRepository] as Repository
-  [CaseAssignmentEngine] as Assignment
-  [CaseEventPublisher] as Publisher
-  [CaseDomainModel] as Domain
-  [NotificationAdapter] as Notification
+package "MS Casos Legales" {
+  [CasoController] as Controller
+  [CasoService] as Service
+  [AsignacionAbogadoService] as Asignacion
+  [EstadoCasoMachine] as EstadoMachine
+  [ActuacionProcesalService] as Actuacion
+  [NotificacionCasoPublisher] as Publisher
+  [CasoRepository] as Repository
 }
 
 APIGW --> Controller : HTTP REST
-Controller --> Service : Orquesta operaciones de caso
-Service --> Repository : Persistencia de casos
-Service --> Assignment : Selección de abogado
-Service --> Domain : Reglas de negocio de caso
-Service --> Publisher : Publica eventos de dominio
-Service --> Notification : Envía notificaciones
-Publisher --> EventBus : Evento "Caso actualizado"
-Repository --> DBCase : CRUD casos
+Controller --> Service : Apertura, consulta, actualización y cierre de casos
+Service --> Asignacion : Asigna abogado según especialidad y carga (RN-11)
+Service --> EstadoMachine : Valida transición de estado
+Service --> Actuacion : Registra actuación procesal
+Service --> Publisher : Publica evento de cambio de estado
+Service --> Repository : Persistencia del expediente
+
+Publisher --> EventBus : Evento "Estado de caso actualizado"
+Repository --> DBCasos : CRUD de expedientes y actuaciones
 
 @enduml

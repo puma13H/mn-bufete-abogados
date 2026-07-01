@@ -1,62 +1,69 @@
 @startuml
 title C4 Nivel 2 - Contenedores del Sistema IURIS
 
-actor Cliente
-actor Abogado
-actor Administrador
-actor Gerente
+actor "Cliente" as Cliente
+actor "Abogado" as Abogado
+actor "Administrador" as Administrador
+actor "Gerente / Socio" as Gerente
 
-rectangle "Portal Web - Angular SPA" as WebApp
+rectangle "Aplicación Web - Angular" as WebApp
 rectangle "Aplicación Móvil - Flutter" as MobileApp
 rectangle "API Gateway - Spring Cloud Gateway" as APIGW
-rectangle "Servicio de Autenticación - Spring Boot" as AuthService
-rectangle "Servicio de Usuarios - Spring Boot" as UserService
-rectangle "Servicio de Casos - Spring Boot" as CaseService
-rectangle "Servicio de Agenda - Spring Boot" as ScheduleService
-rectangle "Servicio de Documentos - Spring Boot" as DocumentService
-rectangle "Servicio de Comunicación - Spring Boot" as CommunicationService
-rectangle "Servicio de Reportes - Spring Boot" as ReportingService
 
-rectangle "PostgreSQL Auth" as DBAuth
-rectangle "PostgreSQL Usuarios" as DBUser
-rectangle "PostgreSQL Casos" as DBCase
-rectangle "PostgreSQL Agenda" as DBSchedule
-rectangle "PostgreSQL Documentos" as DBDocument
-rectangle "PostgreSQL Comunicación" as DBCommunication
-rectangle "PostgreSQL Reportes" as DBReporting
+rectangle "MS Autenticación\nSpring Boot" as MsAuth
+rectangle "MS Usuarios\nSpring Boot" as MsUsuarios
+rectangle "MS Casos Legales\nSpring Boot" as MsCasos
+rectangle "MS Agenda y Audiencias\nSpring Boot" as MsAgenda
+rectangle "MS Documentos\nSpring Boot" as MsDocumentos
+rectangle "MS Comunicación\nSpring Boot" as MsComunicacion
+rectangle "MS Reportes\nSpring Boot" as MsReportes
+
+database "db_auth" as DBAuth
+database "db_usuarios" as DBUsuarios
+database "db_casos" as DBCasos
+database "db_agenda" as DBAgenda
+database "db_documentos" as DBDocumentos
+database "db_comunicacion" as DBComunicacion
+database "db_reportes" as DBReportes
 
 rectangle "Cloudinary" as Cloudinary
 rectangle "Servicio de Videollamadas" as Video
-rectangle "Bus de Eventos (Kafka / RabbitMQ)" as EventBus
+queue "Bus de Eventos" as EventBus
 
 Cliente --> WebApp : Usa funcionalidades del sistema
 Cliente --> MobileApp : Consulta casos y recibe notificaciones
 Abogado --> WebApp : Gestiona casos, agenda y documentos
 Administrador --> WebApp : Administra usuarios, roles y permisos
 Gerente --> WebApp : Consulta reportes y dashboards
+Gerente --> MobileApp : Consulta KPIs en movilidad
 
 WebApp --> APIGW : API REST / JWT
 MobileApp --> APIGW : API REST / JWT
 
-APIGW --> AuthService : Validar credenciales y JWT
-APIGW --> UserService : Gestión de usuarios y roles
-APIGW --> CaseService : Gestión de casos legales
-APIGW --> ScheduleService : Gestión de audiencias y citas
-APIGW --> DocumentService : Gestión de documentos y evidencias
-APIGW --> CommunicationService : Chat y mensajería
-APIGW --> ReportingService : Generación de reportes
+APIGW --> MsAuth : Validar credenciales y JWT
+APIGW --> MsUsuarios : Gestión de usuarios y roles
+APIGW --> MsCasos : Gestión de casos legales
+APIGW --> MsAgenda : Gestión de audiencias y citas
+APIGW --> MsDocumentos : Gestión de documentos
+APIGW --> MsComunicacion : Chat, notificaciones y videollamadas
+APIGW --> MsReportes : Generación de reportes
 
-AuthService --> DBAuth
-UserService --> DBUser
-CaseService --> DBCase
-ScheduleService --> DBSchedule
-DocumentService --> DBDocument
-CommunicationService --> DBCommunication
-ReportingService --> DBReporting
+MsAuth --> DBAuth
+MsUsuarios --> DBUsuarios
+MsCasos --> DBCasos
+MsAgenda --> DBAgenda
+MsDocumentos --> DBDocumentos
+MsComunicacion --> DBComunicacion
+MsReportes --> DBReportes
 
-CaseService --> EventBus : Publica eventos de caso
-ScheduleService --> EventBus : Publica eventos de agenda
-DocumentService --> Cloudinary : Almacena archivos
-CommunicationService --> Video : Controla videollamadas
+MsCasos --> EventBus : Publica eventos de caso
+MsAgenda --> EventBus : Publica eventos de agenda
+EventBus --> MsComunicacion : Consume eventos para notificar
+
+MsDocumentos --> Cloudinary : Almacena archivos
+MsComunicacion --> Video : Controla videollamadas
+MsReportes --> MsCasos : Consulta datos (Feign Client)
+MsReportes --> MsAgenda : Consulta datos (Feign Client)
+MsReportes --> MsUsuarios : Consulta datos (Feign Client)
 
 @enduml
